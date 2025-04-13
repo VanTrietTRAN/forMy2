@@ -1,35 +1,23 @@
-// routes/auth.js
-const express = require("express");
-const router = express.Router();
-const { registerUser, loginUser } = require("../controllers/authController");
+import jwt from 'jsonwebtoken'
+const verifyToken = (req, res, next) => {
+
+    let accessToken = req.headers.authorization?.split(' ')[1]
+    if (!accessToken) return res.status(401).json({
+        err: 1,
+        msg: 'Missing access token'
+    })
+
+    jwt.verify(accessToken, process.env.SECRET_KEY, (err, user) => {
+        if (err) return res.status(401).json({
+            err: 1,
+            msg: 'Access token expired'
+        })
+
+        req.user = user
+        next()
+    })
 
 
-// đăng kí 
-router.post("/register", async (req, res) => {
-    try {
-      console.log("Received data:", req.body); // 👉 để debug xem dữ liệu nhận được
-  
-      const { fullName, phone, password } = req.body;
-  
-      const newUser = new User({
-        fullName,
-        phone,
-        password,
-      });
-  
-      await newUser.save();
-      res.status(201).json({ message: "User registered successfully" });
-  
-    } catch (err) {
-      console.error("Đăng ký thất bại:", err);
-      res.status(500).json({ message: "Registration failed", error: err.message });
-    }
-  });
-  
+}
 
-// Đăng nhập
-router.post("/login", loginUser);
-
-
-
-module.exports = router;
+export default verifyToken
